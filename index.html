@@ -583,7 +583,12 @@
   <!-- =========================================
        JAVASCRIPT
   ========================================== -->
-
+<script>
+window.onerror = function(message, source, line) {
+  document.getElementById("loading-text").textContent =
+    "JAVASCRIPT ERROR: " + message + " — LINEA " + line;
+};
+    </script>
   <script src="script.js"></script>
 
 </body>
