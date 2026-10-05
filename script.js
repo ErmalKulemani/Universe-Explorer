@@ -1230,32 +1230,25 @@ renderer.domElement.addEventListener(
 
     if (!key) return;
 
-    while (
-      hit.parent &&
-      !hit.userData.objectKey &&
-      !hit
-               !hit.name
-    ) {
+while (
+  hit.parent &&
+  !hit.userData.objectKey &&
+  !hit.name
+) {
+  hit = hit.parent;
+}
 
-      hit = hit.parent;
+key =
+  hit.userData.objectKey ||
+  hit.name ||
+  key;
 
-    }
-
-    key =
-      hit.userData.objectKey ||
-      hit.name ||
-      key;
-
-    if (OBJECTS[key]) {
-
-      focusObject(
-        hit,
-        key
-      );
-
-    }
-
-  }
+if (OBJECTS[key]) {
+  focusObject(
+    hit,
+    key
+  );
+}
 );
 
 
