@@ -4,49 +4,139 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Universe Explorer</title>
+  <title>UNIVERSE EXPLORER</title>
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 </head>
 
 <body>
 
+  <!-- 3D UNIVERSE -->
+  <div id="universe"></div>
+
+  <!-- INTERFACCIA -->
   <div id="interface">
 
-    <header>
-      <div class="logo">
-        🌌 UNIVERSE EXPLORER
+    <header class="topbar">
+
+      <div class="brand">
+        <span class="brand-icon">✦</span>
+        <div>
+          <div class="brand-title">UNIVERSE EXPLORER</div>
+          <div class="brand-subtitle">EXPLORE THE REAL UNIVERSE</div>
+        </div>
       </div>
 
-      <input
-        id="search"
-        type="text"
-        placeholder="Search the Universe..."
-      >
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          id="search"
+          type="text"
+          placeholder="Search planets, stars, galaxies..."
+        >
+      </div>
 
-      <button id="explore">
-        🚀 Explore
+      <button id="exploreButton">
+        🚀 EXPLORE
       </button>
+
     </header>
 
+    <!-- NAVIGAZIONE -->
     <div id="breadcrumb">
-      Universe → Milky Way → Solar System
-    </div>
-
-    <div id="scale">
+      UNIVERSE
+      <span>›</span>
+      MILKY WAY
+      <span>›</span>
       SOLAR SYSTEM
     </div>
 
-    <div id="hint">
-      Drag to rotate • Scroll to zoom • Click an object
+    <!-- SCALA -->
+    <div id="scale-display">
+      <div class="scale-label">CURRENT SCALE</div>
+      <div id="scale-value">SOLAR SYSTEM</div>
+    </div>
+
+    <!-- INFORMAZIONI OGGETTO -->
+    <aside id="object-panel">
+
+      <button id="close-panel">×</button>
+
+      <div class="panel-category" id="object-type">
+        CELESTIAL BODY
+      </div>
+
+      <h1 id="object-name">Earth</h1>
+
+      <div class="panel-line"></div>
+
+      <div class="object-data">
+
+        <div>
+          <span>Distance</span>
+          <strong id="object-distance">149.6 million km</strong>
+        </div>
+
+        <div>
+          <span>Diameter</span>
+          <strong id="object-diameter">12,742 km</strong>
+        </div>
+
+        <div>
+          <span>Mass</span>
+          <strong id="object-mass">5.972 × 10²⁴ kg</strong>
+        </div>
+
+        <div>
+          <span>Temperature</span>
+          <strong id="object-temperature">288 K</strong>
+        </div>
+
+      </div>
+
+      <div class="panel-description" id="object-description">
+        Earth is the third planet from the Sun and the only known astronomical
+        object to support life.
+      </div>
+
+      <button id="focus-button">
+        ⦿ FOCUS OBJECT
+      </button>
+
+    </aside>
+
+    <!-- CONTROLLI -->
+    <div id="controls">
+
+      <button id="zoom-in">＋</button>
+
+      <button id="zoom-out">−</button>
+
+      <button id="reset-camera">⌂</button>
+
+    </div>
+
+    <!-- INFORMAZIONI IN BASSO -->
+    <div id="bottom-info">
+
+      <div>
+        <span class="status-dot"></span>
+        UNIVERSE SIMULATION ONLINE
+      </div>
+
+      <div>
+        DRAG TO ROTATE
+      </div>
+
+      <div>
+        PINCH TO ZOOM
+      </div>
+
     </div>
 
   </div>
-
-  <div id="info-panel"></div>
 
   <script src="script.js"></script>
 
