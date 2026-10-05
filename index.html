@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universe Explorer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    overflow: hidden;
+    background: #02030a;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+#universe {
+    position: fixed;
+    inset: 0;
+}
+
+canvas {
+    display: block;
+}
+
+.topbar {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    z-index: 10;
+    background: rgba(5, 8, 20, 0.72);
+    border: 1px solid rgba(120,160,255,.25);
+    border-radius: 16px;
+    padding: 10px 16px;
+    backdrop-filter: blur(15px);
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.search {
+    flex: 1;
+    max-width: 520px;
+    margin: auto;
+}
+
+.search input {
+    width: 100%;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: white;
+    outline: none;
+    font-size: 15px;
+}
+
+.search input::placeholder {
+    color: #9ca3b5;
+}
+
+.button {
+    border: 1px solid rgba(130,170,255,.35);
+    background: rgba(60,90,180,.18);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background: rgba(80,120,230,.35);
+}
+
+.scale {
+    position: fixed;
+    bottom: 22px;
+    left: 22px;
+    z-index: 10;
+    background: rgba(5,8,20,.75);
+    border: 1px solid rgba(120,160,255,.25);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: #b8c7ff;
+    font-size: 13px;
+    backdrop-filter: blur(10px);
+}
+
+.breadcrumb {
+    position: fixed;
+    top: 92px;
+    left: 22px;
+    z-index: 10;
+    color: #9ba9c9;
+    font-size: 13px;
+}
+
+.info-panel {
+    position: fixed;
+    top: 95px;
+    right: 20px;
+    width: 390px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    z-index: 20;
+    background: rgba(7,10,23,.92);
+    border: 1px solid rgba(120,160,255,.35);
+    border-radius: 18px;
+    padding: 22px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 70px rgba(0,0,0,.5);
+    display: none;
+}
+
+.info-panel.active {
+    display: block;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    color: #9ca3b5;
+    font-size: 22px;
+}
+
+.info-title {
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.info-type {
+    color: #829cff;
+    margin-bottom: 18px;
+}
+
+.info-section {
+    margin-top: 18px;
+}
+
+.info-section h3 {
+    font-size: 13px;
+    color: #829cff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    font-size: 14px;
+}
+
+.info-row span:first-child {
+    color: #9da7bd;
+}
+
+.info-row span:last-child {
+    text-align: right;
+}
+
+.source {
+    margin-top: 18px;
+    color: #78849e;
+    font-size: 11px;
+}
+
+.home {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background:
+        radial-gradient(circle at center, rgba(35,55,130,.25), transparent 40%),
+        #02030a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.home.hidden {
+    display: none;
+}
+
+.home-content h1 {
+    font-size: clamp(42px, 8vw, 90px);
+    letter-spacing: 5px;
+    margin-bottom: 12px;
+}
+
+.home-content p {
+    color: #9da9c5;
+    font-size: 18px;
+    margin-bottom: 35px;
+}
+
+.start {
+    padding: 16px 30px;
+    border-radius: 14px;
+    border: 1px solid rgba(130,170,255,.5);
+    background: rgba(60,90,180,.25);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.quick {
+    margin-top: 28px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.quick button {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    color: #c8d1e8;
+    border-radius: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+}
+
+@media(max-width:700px) {
+    .topbar {
+        top: 10px
