@@ -13,132 +13,578 @@
 
 <body>
 
-  <!-- 3D UNIVERSE -->
+  <!-- =========================================
+       3D UNIVERSE
+  ========================================== -->
+
   <div id="universe"></div>
 
-  <!-- INTERFACCIA -->
-  <div id="interface">
 
-    <header class="topbar">
+  <!-- =========================================
+       LOADING SCREEN
+  ========================================== -->
 
-      <div class="brand">
-        <span class="brand-icon">✦</span>
-        <div>
-          <div class="brand-title">UNIVERSE EXPLORER</div>
-          <div class="brand-subtitle">EXPLORE THE REAL UNIVERSE</div>
-        </div>
-      </div>
+  <div id="loading">
 
-      <div class="search-box">
-        <span>⌕</span>
-        <input
-          id="search"
-          type="text"
-          placeholder="Search planets, stars, galaxies..."
-        >
-      </div>
+    <div class="loader-ring"></div>
 
-      <button id="exploreButton">
-        🚀 EXPLORE
-      </button>
-
-    </header>
-
-    <!-- NAVIGAZIONE -->
-    <div id="breadcrumb">
-      UNIVERSE
-      <span>›</span>
-      MILKY WAY
-      <span>›</span>
-      SOLAR SYSTEM
+    <div class="loading-title">
+      UNIVERSE EXPLORER
     </div>
 
-    <!-- SCALA -->
-    <div id="scale-display">
-      <div class="scale-label">CURRENT SCALE</div>
-      <div id="scale-value">SOLAR SYSTEM</div>
+    <div id="loading-text">
+      INITIALIZING UNIVERSE...
     </div>
 
-    <!-- INFORMAZIONI OGGETTO -->
-    <aside id="object-panel">
-
-      <button id="close-panel">×</button>
-
-      <div class="panel-category" id="object-type">
-        CELESTIAL BODY
-      </div>
-
-      <h1 id="object-name">Earth</h1>
-
-      <div class="panel-line"></div>
-
-      <div class="object-data">
-
-        <div>
-          <span>Distance</span>
-          <strong id="object-distance">149.6 million km</strong>
-        </div>
-
-        <div>
-          <span>Diameter</span>
-          <strong id="object-diameter">12,742 km</strong>
-        </div>
-
-        <div>
-          <span>Mass</span>
-          <strong id="object-mass">5.972 × 10²⁴ kg</strong>
-        </div>
-
-        <div>
-          <span>Temperature</span>
-          <strong id="object-temperature">288 K</strong>
-        </div>
-
-      </div>
-
-      <div class="panel-description" id="object-description">
-        Earth is the third planet from the Sun and the only known astronomical
-        object to support life.
-      </div>
-
-      <button id="focus-button">
-        ⦿ FOCUS OBJECT
-      </button>
-
-    </aside>
-
-    <!-- CONTROLLI -->
-    <div id="controls">
-
-      <button id="zoom-in">＋</button>
-
-      <button id="zoom-out">−</button>
-
-      <button id="reset-camera">⌂</button>
-
-    </div>
-
-    <!-- INFORMAZIONI IN BASSO -->
-    <div id="bottom-info">
-
-      <div>
-        <span class="status-dot"></span>
-        UNIVERSE SIMULATION ONLINE
-      </div>
-
-      <div>
-        DRAG TO ROTATE
-      </div>
-
-      <div>
-        PINCH TO ZOOM
-      </div>
-
+    <div class="loading-bar">
+      <span id="loading-progress"></span>
     </div>
 
   </div>
 
+
+  <!-- =========================================
+       INTERFACE
+  ========================================== -->
+
+  <div id="interface">
+
+
+    <!-- =======================================
+         TOP BAR
+    ======================================== -->
+
+    <header class="topbar">
+
+      <button
+        class="brand"
+        id="homeButton"
+        aria-label="Home"
+      >
+
+        <span class="brand-icon">
+          ✦
+        </span>
+
+        <span class="brand-text">
+
+          <strong>
+            UNIVERSE EXPLORER
+          </strong>
+
+          <small>
+            EXPLORE THE REAL UNIVERSE
+          </small>
+
+        </span>
+
+      </button>
+
+
+      <!-- SEARCH -->
+
+      <div class="search-box">
+
+        <span class="search-icon">
+          ⌕
+        </span>
+
+        <input
+          id="search"
+          type="text"
+          autocomplete="off"
+          placeholder="Search planets, stars, galaxies..."
+        >
+
+        <div id="search-results"></div>
+
+      </div>
+
+
+      <!-- EXPLORE -->
+
+      <button
+        class="space-button"
+        id="exploreButton"
+      >
+
+        <span class="button-icon">
+          🚀
+        </span>
+
+        <span>
+          EXPLORE
+        </span>
+
+      </button>
+
+
+      <!-- MENU -->
+
+      <button
+        class="space-button menu-button"
+        id="menuButton"
+      >
+
+        <span class="button-icon">
+          ☰
+        </span>
+
+      </button>
+
+    </header>
+
+
+
+    <!-- =======================================
+         BREADCRUMB
+    ======================================== -->
+
+    <div id="breadcrumb">
+
+      <button data-breadcrumb="universe">
+        UNIVERSE
+      </button>
+
+      <span>›</span>
+
+      <button data-breadcrumb="milkyway">
+        MILKY WAY
+      </button>
+
+      <span>›</span>
+
+      <button data-breadcrumb="solarsystem">
+        SOLAR SYSTEM
+      </button>
+
+    </div>
+
+
+
+    <!-- =======================================
+         CURRENT SCALE
+    ======================================== -->
+
+    <div id="scale-display">
+
+      <div class="scale-label">
+        CURRENT SCALE
+      </div>
+
+      <div id="scale-value">
+        SOLAR SYSTEM
+      </div>
+
+      <div id="scale-note">
+        VISUAL DISTANCES COMPRESSED FOR EXPLORATION
+      </div>
+
+    </div>
+
+
+
+    <!-- =======================================
+         WELCOME PANEL
+    ======================================== -->
+
+    <section
+      id="welcome"
+      class="hud-panel"
+    >
+
+      <div class="panel-eyebrow">
+        INTERACTIVE COSMOS
+      </div>
+
+      <h1>
+        Explore the real Universe.
+      </h1>
+
+      <p>
+        Navigate through planets, stars, galaxies,
+        black holes and the largest structures of
+        the observable Universe.
+      </p>
+
+
+      <div class="welcome-buttons">
+
+        <button
+          class="primary-space-button"
+          id="startButton"
+        >
+
+          <span>START EXPLORING</span>
+
+          <i>→</i>
+
+        </button>
+
+
+        <button
+          class="secondary-space-button"
+          data-mode="solar"
+        >
+
+          ☀ SOLAR SYSTEM
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =======================================
+         OBJECT PANEL
+    ======================================== -->
+
+    <aside id="object-panel">
+
+      <button
+        id="close-panel"
+        class="close-space-button"
+      >
+        ×
+      </button>
+
+
+      <div
+        class="panel-category"
+        id="object-type"
+      >
+        CELESTIAL BODY
+      </div>
+
+
+      <h2 id="object-name">
+        Earth
+      </h2>
+
+
+      <div class="object-tabs">
+
+        <button
+          class="active"
+          data-tab="overview"
+        >
+          OVERVIEW
+        </button>
+
+        <button data-tab="facts">
+          FACTS
+        </button>
+
+        <button data-tab="history">
+          DISCOVERY
+        </button>
+
+      </div>
+
+
+      <div id="panel-content"></div>
+
+
+      <button
+        id="focus-button"
+        class="primary-space-button full-width"
+      >
+
+        <span>
+          ⦿ FOCUS OBJECT
+        </span>
+
+        <i>
+          →
+        </i>
+
+      </button>
+
+    </aside>
+
+
+
+    <!-- =======================================
+         COMPARE
+    ======================================== -->
+
+    <section
+      id="compare-panel"
+      class="hud-panel modal-panel hidden"
+    >
+
+      <button
+        class="close-space-button"
+        id="close-compare"
+      >
+        ×
+      </button>
+
+
+      <div class="panel-eyebrow">
+        COMPARISON SYSTEM
+      </div>
+
+      <h2>
+        COMPARE OBJECTS
+      </h2>
+
+
+      <div class="compare-selects">
+
+        <select id="compare-a"></select>
+
+        <div class="vs">
+          VS
+        </div>
+
+        <select id="compare-b"></select>
+
+      </div>
+
+
+      <div id="compare-table"></div>
+
+    </section>
+
+
+
+    <!-- =======================================
+         TIME TRAVEL
+    ======================================== -->
+
+    <section
+      id="time-panel"
+      class="hud-panel modal-panel hidden"
+    >
+
+      <button
+        class="close-space-button"
+        id="close-time"
+      >
+        ×
+      </button>
+
+
+      <div class="panel-eyebrow">
+        COSMIC HISTORY
+      </div>
+
+      <h2>
+        ⏳ TIME TRAVEL
+      </h2>
+
+
+      <p id="time-description"></p>
+
+
+      <input
+        id="time-slider"
+        type="range"
+        min="0"
+        max="5"
+        value="5"
+      >
+
+
+      <div class="timeline-labels">
+
+        <span>
+          13.8 BYA
+        </span>
+
+        <span>
+          EARLY UNIVERSE
+        </span>
+
+        <span>
+          TODAY
+        </span>
+
+        <span>
+          FUTURE
+        </span>
+
+      </div>
+
+
+      <div
+        class="model-badge"
+        id="time-badge"
+      >
+        OBSERVED / MEASURED
+      </div>
+
+    </section>
+
+
+
+    <!-- =======================================
+         EXPLORE JOURNEY
+    ======================================== -->
+
+    <section
+      id="explore-panel"
+      class="hud-panel modal-panel hidden"
+    >
+
+      <button
+        class="close-space-button"
+        id="close-explore"
+      >
+        ×
+      </button>
+
+
+      <div class="panel-eyebrow">
+        COSMIC JOURNEY
+      </div>
+
+      <h2>
+        🚀 EXPLORE THE UNIVERSE
+      </h2>
+
+
+      <p id="journey-text">
+        Earth
+      </p>
+
+
+      <div class="journey-progress">
+
+        <span id="journey-progress"></span>
+
+      </div>
+
+
+      <div class="journey-controls">
+
+        <button id="journey-prev">
+          ‹
+        </button>
+
+        <button id="journey-next">
+          NEXT →
+        </button>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =======================================
+         SIDE MENU
+    ======================================== -->
+
+    <nav id="side-menu">
+
+      <button data-action="solar">
+        <span>☀</span>
+        SOLAR SYSTEM
+      </button>
+
+      <button data-action="galaxies">
+        <span>✦</span>
+        GALAXIES
+      </button>
+
+      <button data-action="blackholes">
+        <span>◉</span>
+        BLACK HOLES
+      </button>
+
+      <button data-action="compare">
+        <span>⇄</span>
+        COMPARE
+      </button>
+
+      <button data-action="time">
+        <span>⏳</span>
+        TIME TRAVEL
+      </button>
+
+      <button data-action="reset">
+        <span>⌂</span>
+        RESET VIEW
+      </button>
+
+    </nav>
+
+
+
+    <!-- =======================================
+         3D CONTROLS
+    ======================================== -->
+
+    <div id="controls">
+
+      <button
+        id="zoom-in"
+        class="orbital-control"
+      >
+        +
+      </button>
+
+      <button
+        id="zoom-out"
+        class="orbital-control"
+      >
+        −
+      </button>
+
+      <button
+        id="reset-camera"
+        class="orbital-control"
+      >
+        ⌂
+      </button>
+
+    </div>
+
+
+
+    <!-- =======================================
+         BOTTOM STATUS
+    ======================================== -->
+
+    <div id="bottom-info">
+
+      <span>
+        <i class="status-dot"></i>
+        UNIVERSE SIMULATION ONLINE
+      </span>
+
+      <span>
+        DRAG TO ROTATE
+      </span>
+
+      <span>
+        PINCH TO ZOOM
+      </span>
+
+      <span>
+        PUBLIC ASTRONOMICAL DATA
+      </span>
+
+    </div>
+
+
+
+    <!-- TOAST -->
+
+    <div id="toast"></div>
+
+  </div>
+
+
+  <!-- =========================================
+       JAVASCRIPT
+  ========================================== -->
+
   <script src="script.js"></script>
 
 </body>
-</html>
+  </html>
