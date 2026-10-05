@@ -1269,3 +1269,6 @@ body {
 .hidden {
   display: none !important;
 }
+#loading.hidden {
+  display: none !important;
+}
