@@ -590,6 +590,21 @@ window.onerror = function(message, source, line) {
 };
     </script>
   <script src="script.js"></script>
+<script>
+window.onerror = function(message, source, line) {
+  document.getElementById("loading-text").textContent =
+    "JAVASCRIPT ERROR: " + message + " — LINEA " + line;
+};
+</script>
+
+<script src="script.js"></script>
+
+<script>
+setTimeout(function() {
+  document.getElementById("loading").classList.add("hidden");
+}, 3000);
+</script>
 
 </body>
-  </html>
+</html>
+
