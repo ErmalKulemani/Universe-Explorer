@@ -1,296 +1,340 @@
 /* =========================================================
    UNIVERSE EXPLORER
-   Advanced 3D Solar System Engine
+   Main 3D engine
+   Three.js
    ========================================================= */
 
-const planets = [
-  {
-    name: "Mercury",
-    type: "ROCKY PLANET",
-    distance: "57.9 million km",
-    diameter: "4,879 km",
-    mass: "3.301 × 10²³ kg",
-    temperature: "440 K",
-    description:
-      "Mercury is the smallest planet in the Solar System and the closest planet to the Sun.",
-    orbit: 11,
-    size: 0.75,
-    speed: 0.020,
-    color: 0x8b8178
-  },
-
-  {
-    name: "Venus",
-    type: "ROCKY PLANET",
-    distance: "108.2 million km",
-    diameter: "12,104 km",
-    mass: "4.867 × 10²⁴ kg",
-    temperature: "737 K",
-    description:
-      "Venus has a dense carbon-dioxide atmosphere and is the hottest planet in the Solar System.",
-    orbit: 16,
-    size: 1.15,
-    speed: 0.014,
-    color: 0xd4a05e
-  },
-
-  {
-    name: "Earth",
-    type: "ROCKY PLANET",
-    distance: "149.6 million km",
-    diameter: "12,742 km",
-    mass: "5.972 × 10²⁴ kg",
-    temperature: "288 K",
-    description:
-      "Earth is the third planet from the Sun and the only known astronomical body supporting life.",
-    orbit: 21,
-    size: 1.3,
-    speed: 0.010,
-    color: 0x2d72c8
-  },
-
-  {
-    name: "Mars",
-    type: "ROCKY PLANET",
-    distance: "227.9 million km",
-    diameter: "6,779 km",
-    mass: "6.417 × 10²³ kg",
-    temperature: "210 K",
-    description:
-      "Mars is a cold terrestrial planet with a thin atmosphere and a surface shaped by ancient geological activity.",
-    orbit: 27,
-    size: 1.0,
-    speed: 0.008,
-    color: 0xb84b35
-  },
-
-  {
-    name: "Jupiter",
-    type: "GAS GIANT",
-    distance: "778.5 million km",
-    diameter: "139,820 km",
-    mass: "1.898 × 10²⁷ kg",
-    temperature: "165 K",
-    description:
-      "Jupiter is the largest planet in the Solar System and is dominated by hydrogen and helium.",
-    orbit: 37,
-    size: 3.25,
-    speed: 0.004,
-    color: 0xb88763
-  },
-
-  {
-    name: "Saturn",
-    type: "GAS GIANT",
-    distance: "1.43 billion km",
-    diameter: "116,460 km",
-    mass: "5.683 × 10²⁶ kg",
-    temperature: "134 K",
-    description:
-      "Saturn is a gas giant famous for its extensive system of bright planetary rings.",
-    orbit: 48,
-    size: 2.85,
-    speed: 0.003,
-    color: 0xd2bd88
-  },
-
-  {
-    name: "Uranus",
-    type: "ICE GIANT",
-    distance: "2.87 billion km",
-    diameter: "50,724 km",
-    mass: "8.681 × 10²⁵ kg",
-    temperature: "76 K",
-    description:
-      "Uranus is an ice giant with an unusual axial tilt that causes extreme seasonal variations.",
-    orbit: 59,
-    size: 2.0,
-    speed: 0.002,
-    color: 0x6bd0d0
-  },
-
-  {
-    name: "Neptune",
-    type: "ICE GIANT",
-    distance: "4.50 billion km",
-    diameter: "49,244 km",
-    mass: "1.024 × 10²⁶ kg",
-    temperature: "72 K",
-    description:
-      "Neptune is the farthest major planet from the Sun and has some of the fastest winds in the Solar System.",
-    orbit: 70,
-    size: 2.0,
-    speed: 0.0015,
-    color: 0x4169e1
-  }
-];
-
+"use strict";
 
 /* =========================================================
-   GLOBAL STATE
+   BASIC SETUP
    ========================================================= */
 
-let scene;
-let camera;
-let renderer;
+const universe = document.getElementById("universe");
 
-let sun;
-let earth;
-let moon;
+const scene = new THREE.Scene();
 
-const celestialObjects = [];
-const orbitObjects = [];
+scene.background = new THREE.Color(0x000207);
 
-let cameraYaw = 0.35;
-let cameraPitch = 0.35;
+const camera = new THREE.PerspectiveCamera(
+  55,
+  window.innerWidth / window.innerHeight,
+  0.01,
+  100000
+);
 
-let cameraDistance = 105;
+camera.position.set(0, 18, 42);
 
-let dragging = false;
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: false
+});
 
-let lastPointerX = 0;
-let lastPointerY = 0;
+renderer.setPixelRatio(
+  Math.min(window.devicePixelRatio || 1, 2)
+);
 
-let pinchDistance = 0;
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
 
-let selectedObject = null;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-let focusTarget = new THREE.Vector3();
-let focusActive = false;
-
-let targetCameraDistance = 105;
-
-const clock = new THREE.Clock();
-
-
-/* =========================================================
-   INITIALIZATION
-   ========================================================= */
-
-function init() {
-
-  scene = new THREE.Scene();
-
-  scene.background = new THREE.Color(0x000208);
-
-  createCamera();
-
-  createRenderer();
-
-  createLighting();
-
-  createSun();
-
-  createPlanets();
-
-  createAsteroidBelt();
-
-  createStars();
-
-  createNebulaDust();
-
-  setupInteraction();
-
-  setupUI();
-
-  window.addEventListener("resize", onResize);
-
-  animate();
-}
-
-
-/* =========================================================
-   CAMERA
-   ========================================================= */
-
-function createCamera() {
-
-  camera = new THREE.PerspectiveCamera(
-    55,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    20000
-  );
-
-  updateCamera();
-}
-
-
-function updateCamera() {
-
-  const horizontal =
-    Math.cos(cameraPitch) * cameraDistance;
-
-  camera.position.x =
-    Math.sin(cameraYaw) * horizontal;
-
-  camera.position.z =
-    Math.cos(cameraYaw) * horizontal;
-
-  camera.position.y =
-    Math.sin(cameraPitch) * cameraDistance;
-
-  camera.lookAt(focusTarget);
-}
-
-
-/* =========================================================
-   RENDERER
-   ========================================================= */
-
-function createRenderer() {
-
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    powerPreference: "high-performance"
-  });
-
-  renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio || 1, 1.8)
-  );
-
-  renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-  );
-
-  renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-  document
-    .getElementById("universe")
-    .appendChild(renderer.domElement);
-}
+universe.appendChild(renderer.domElement);
 
 
 /* =========================================================
    LIGHTING
    ========================================================= */
 
-function createLighting() {
+const ambientLight = new THREE.AmbientLight(
+  0xffffff,
+  0.18
+);
 
-  const ambient =
-    new THREE.AmbientLight(
-      0xffffff,
-      0.18
-    );
+scene.add(ambientLight);
 
-  scene.add(ambient);
+const sunLight = new THREE.PointLight(
+  0xffffff,
+  4,
+  500
+);
 
-  const sunLight =
-    new THREE.PointLight(
-      0xfff4d6,
-      5,
-      2000
-    );
+sunLight.position.set(0, 0, 0);
 
-  sunLight.position.set(
-    0,
-    0,
-    0
-  );
+scene.add(sunLight);
 
-  scene.add(sunLight);
+
+/* =========================================================
+   GROUPS
+   ========================================================= */
+
+const universeGroup = new THREE.Group();
+
+const solarSystemGroup = new THREE.Group();
+
+const galaxyGroup = new THREE.Group();
+
+const largeScaleGroup = new THREE.Group();
+
+scene.add(universeGroup);
+universeGroup.add(solarSystemGroup);
+universeGroup.add(galaxyGroup);
+universeGroup.add(largeScaleGroup);
+
+
+/* =========================================================
+   OBJECT DATABASE
+   ========================================================= */
+
+const OBJECTS = {
+
+  Sun: {
+    name: "Sun",
+    type: "STAR",
+    distance: "0 AU from Earth",
+    size: "1,391,000 km",
+    mass: "1.989 × 10³⁰ kg",
+    temperature: "≈ 5,500 °C surface",
+    color: 0xffcc66,
+    radius: 3.8
+  },
+
+  Mercury: {
+    name: "Mercury",
+    type: "PLANET",
+    distance: "≈ 77 million km",
+    size: "4,879 km",
+    mass: "3.301 × 10²³ kg",
+    temperature: "≈ 167 °C average",
+    color: 0x9d9990,
+    radius: 0.55
+  },
+
+  Venus: {
+    name: "Venus",
+    type: "PLANET",
+    distance: "≈ 41 million km",
+    size: "12,104 km",
+    mass: "4.867 × 10²⁴ kg",
+    temperature: "≈ 464 °C average",
+    color: 0xd9b27a,
+    radius: 0.95
+  },
+
+  Earth: {
+    name: "Earth",
+    type: "PLANET",
+    distance: "1 AU",
+    size: "12,742 km",
+    mass: "5.972 × 10²⁴ kg",
+    temperature: "≈ 15 °C average",
+    color: 0x4d8dff,
+    radius: 1.05
+  },
+
+  Moon: {
+    name: "Moon",
+    type: "NATURAL SATELLITE",
+    distance: "≈ 384,400 km from Earth",
+    size: "3,475 km",
+    mass: "7.342 × 10²² kg",
+    temperature: "Extreme surface variation",
+    color: 0xb7b7b7,
+    radius: 0.28
+  },
+
+  Mars: {
+    name: "Mars",
+    type: "PLANET",
+    distance: "≈ 225 million km",
+    size: "6,779 km",
+    mass: "6.417 × 10²³ kg",
+    temperature: "≈ −63 °C average",
+    color: 0xb65f45,
+    radius: 0.78
+  },
+
+  Jupiter: {
+    name: "Jupiter",
+    type: "GAS GIANT",
+    distance: "≈ 778 million km",
+    size: "139,820 km",
+    mass: "1.898 × 10²⁷ kg",
+    temperature: "≈ −110 °C cloud tops",
+    color: 0xd5b58c,
+    radius: 2.9
+  },
+
+  Saturn: {
+    name: "Saturn",
+    type: "GAS GIANT",
+    distance: "≈ 1.43 billion km",
+    size: "116,460 km",
+    mass: "5.683 × 10²⁶ kg",
+    temperature: "≈ −140 °C cloud tops",
+    color: 0xd7c18e,
+    radius: 2.55
+  },
+
+  Uranus: {
+    name: "Uranus",
+    type: "ICE GIANT",
+    distance: "≈ 2.87 billion km",
+    size: "50,724 km",
+    mass: "8.681 × 10²⁵ kg",
+    temperature: "≈ −195 °C",
+    color: 0x75d7d9,
+    radius: 1.7
+  },
+
+  Neptune: {
+    name: "Neptune",
+    type: "ICE GIANT",
+    distance: "≈ 4.50 billion km",
+    size: "49,244 km",
+    mass: "1.024 × 10²⁶ kg",
+    temperature: "≈ −200 °C",
+    color: 0x4779e6,
+    radius: 1.7
+  },
+
+  Pluto: {
+    name: "Pluto",
+    type: "DWARF PLANET",
+    distance: "≈ 5.9 billion km",
+    size: "2,377 km",
+    mass: "1.303 × 10²² kg",
+    temperature: "≈ −229 °C",
+    color: 0xb9a99a,
+    radius: 0.48
+  },
+
+  "Sagittarius A*": {
+    name: "Sagittarius A*",
+    type: "SUPERMASSIVE BLACK HOLE",
+    distance: "≈ 26,700 light-years",
+    size: "≈ 24 million km event-horizon diameter",
+    mass: "≈ 4.3 million solar masses",
+    temperature: "Accretion environment varies",
+    color: 0x090909,
+    radius: 2.4
+  },
+
+  "Milky Way": {
+    name: "Milky Way",
+    type: "BARRED SPIRAL GALAXY",
+    distance: "Our galaxy",
+    size: "≈ 100,000 light-years",
+    mass: "≈ 1.5 trillion solar masses",
+    temperature: "Multiple components",
+    color: 0x9ec9ff,
+    radius: 15
+  },
+
+  "Andromeda Galaxy": {
+    name: "Andromeda Galaxy",
+    type: "SPIRAL GALAXY",
+    distance: "≈ 2.54 million light-years",
+    size: "≈ 220,000 light-years",
+    mass: "≈ 1 trillion solar masses",
+    temperature: "Multiple components",
+    color: 0xaed8ff,
+    radius: 18
+  }
+
+};
+
+
+/* =========================================================
+   SOLAR SYSTEM DATA
+   ========================================================= */
+
+const planetData = [
+
+  {
+    key: "Mercury",
+    orbit: 8,
+    speed: 0.020
+  },
+
+  {
+    key: "Venus",
+    orbit: 12,
+    speed: 0.015
+  },
+
+  {
+    key: "Earth",
+    orbit: 17,
+    speed: 0.011
+  },
+
+  {
+    key: "Mars",
+    orbit: 22,
+    speed: 0.009
+  },
+
+  {
+    key: "Jupiter",
+    orbit: 30,
+    speed: 0.005
+  },
+
+  {
+    key: "Saturn",
+    orbit: 40,
+    speed: 0.0035
+  },
+
+  {
+    key: "Uranus",
+    orbit: 50,
+    speed: 0.0023
+  },
+
+  {
+    key: "Neptune",
+    orbit: 60,
+    speed: 0.0017
+  },
+
+  {
+    key: "Pluto",
+    orbit: 70,
+    speed: 0.001
+  }
+
+];
+
+
+/* =========================================================
+   MATERIAL HELPERS
+   ========================================================= */
+
+function createPlanetMaterial(color) {
+
+  return new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.82,
+    metalness: 0.02
+  });
+
+}
+
+
+function createStarMaterial(color, emissiveIntensity = 1) {
+
+  return new THREE.MeshStandardMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity,
+    roughness: 0.25,
+    metalness: 0
+  });
+
 }
 
 
@@ -298,361 +342,270 @@ function createLighting() {
    SUN
    ========================================================= */
 
-function createSun() {
+const sunGeometry = new THREE.SphereGeometry(
+  OBJECTS.Sun.radius,
+  64,
+  64
+);
 
-  const geometry =
-    new THREE.SphereGeometry(
-      6,
-      64,
-      64
-    );
+const sunMaterial = createStarMaterial(
+  OBJECTS.Sun.color,
+  2.2
+);
 
-  const material =
-    new THREE.MeshBasicMaterial({
-      color: 0xffcc55
-    });
+const sun = new THREE.Mesh(
+  sunGeometry,
+  sunMaterial
+);
 
-  sun =
-    new THREE.Mesh(
-      geometry,
-      material
-    );
+sun.name = "Sun";
 
-  sun.name = "Sun";
-
-  sun.userData = {
-    name: "Sun",
-    type: "STAR",
-    distance: "0 km",
-    diameter: "1,392,700 km",
-    mass: "1.989 × 10³⁰ kg",
-    temperature: "5,778 K",
-    description:
-      "The Sun is the star at the center of our Solar System and contains almost all of its mass."
-  };
-
-  scene.add(sun);
-
-  celestialObjects.push(sun);
-
-  createSunGlow();
-}
+solarSystemGroup.add(sun);
 
 
-function createSunGlow() {
+/* Sun glow */
 
-  const glowGeometry =
-    new THREE.SphereGeometry(
-      7.5,
-      32,
-      32
-    );
+const sunGlowGeometry = new THREE.SphereGeometry(
+  5.2,
+  48,
+  48
+);
 
-  const glowMaterial =
-    new THREE.MeshBasicMaterial({
-      color: 0xffa533,
-      transparent: true,
-      opacity: 0.12,
-      side: THREE.BackSide
-    });
+const sunGlowMaterial = new THREE.MeshBasicMaterial({
+  color: 0xffb733,
+  transparent: true,
+  opacity: 0.08,
+  side: THREE.BackSide
+});
 
-  const glow =
-    new THREE.Mesh(
-      glowGeometry,
-      glowMaterial
-    );
+const sunGlow = new THREE.Mesh(
+  sunGlowGeometry,
+  sunGlowMaterial
+);
 
-  sun.add(glow);
-}
+sun.add(sunGlow);
 
 
 /* =========================================================
    PLANETS
    ========================================================= */
 
-function createPlanets() {
+const planetObjects = {};
 
-  planets.forEach((data, index) => {
+const planetPivots = {};
 
-    const planetGeometry =
-      new THREE.SphereGeometry(
-        data.size,
-        48,
-        48
-      );
+for (const data of planetData) {
 
-    const planetMaterial =
-      new THREE.MeshStandardMaterial({
-        color: data.color,
-        roughness: 0.8,
-        metalness: 0.0
-      });
+  const objectInfo = OBJECTS[data.key];
 
-    const planet =
-      new THREE.Mesh(
-        planetGeometry,
-        planetMaterial
-      );
+  const pivot = new THREE.Group();
 
-    planet.userData = data;
+  planetPivots[data.key] = pivot;
 
-    planet.name = data.name;
+  solarSystemGroup.add(pivot);
 
-    const angle =
-      index * 0.8;
+  const geometry = new THREE.SphereGeometry(
+    objectInfo.radius,
+    48,
+    48
+  );
 
-    planet.position.set(
-      Math.cos(angle) * data.orbit,
-      0,
-      Math.sin(angle) * data.orbit
+  const material = createPlanetMaterial(
+    objectInfo.color
+  );
+
+  const planet = new THREE.Mesh(
+    geometry,
+    material
+  );
+
+  planet.name = data.key;
+
+  planet.userData.objectKey = data.key;
+
+  planet.position.x = data.orbit;
+
+  pivot.add(planet);
+
+  planetObjects[data.key] = planet;
+
+
+  /* Orbit line */
+
+  const orbitGeometry =
+    new THREE.RingGeometry(
+      data.orbit - 0.012,
+      data.orbit + 0.012,
+      256
     );
 
-    scene.add(planet);
-
-    celestialObjects.push(planet);
-
-    orbitObjects.push({
-      mesh: planet,
-      data: data,
-      angle: angle
-    });
-
-    createOrbit(data.orbit);
-
-    if (data.name === "Earth") {
-
-      earth = planet;
-
-      createMoon(planet);
-    }
-
-    if (data.name === "Saturn") {
-
-      createSaturnRings(planet);
-    }
-  });
-}
-
-
-/* =========================================================
-   ORBITS
-   ========================================================= */
-
-function createOrbit(radius) {
-
-  const points = [];
-
-  const segments = 160;
-
-  for (let i = 0; i <= segments; i++) {
-
-    const angle =
-      (i / segments) *
-      Math.PI *
-      2;
-
-    points.push(
-      new THREE.Vector3(
-        Math.cos(angle) * radius,
-        0,
-        Math.sin(angle) * radius
-      )
-    );
-  }
-
-  const geometry =
-    new THREE.BufferGeometry()
-      .setFromPoints(points);
-
-  const material =
-    new THREE.LineBasicMaterial({
-      color: 0x244b6e,
+  const orbitMaterial =
+    new THREE.MeshBasicMaterial({
+      color: 0x2b8bb5,
       transparent: true,
-      opacity: 0.32
+      opacity: 0.13,
+      side: THREE.DoubleSide
     });
 
-  const line =
-    new THREE.Line(
-      geometry,
-      material
-    );
+  const orbit = new THREE.Mesh(
+    orbitGeometry,
+    orbitMaterial
+  );
 
-  scene.add(line);
+  orbit.rotation.x = Math.PI / 2;
+
+  solarSystemGroup.add(orbit);
+
 }
 
 
 /* =========================================================
-   EARTH + MOON
+   MOON
    ========================================================= */
 
-function createMoon(parent) {
+const moonPivot = new THREE.Group();
 
-  const geometry =
-    new THREE.SphereGeometry(
-      0.35,
-      32,
-      32
-    );
+planetObjects.Earth.add(moonPivot);
 
-  const material =
-    new THREE.MeshStandardMaterial({
-      color: 0xb9b9b9,
-      roughness: 1
-    });
+const moonGeometry = new THREE.SphereGeometry(
+  OBJECTS.Moon.radius,
+  32,
+  32
+);
 
-  moon =
-    new THREE.Mesh(
-      geometry,
-      material
-    );
+const moonMaterial = createPlanetMaterial(
+  OBJECTS.Moon.color
+);
 
-  moon.name = "Moon";
+const moon = new THREE.Mesh(
+  moonGeometry,
+  moonMaterial
+);
 
-  moon.userData = {
-    name: "Moon",
-    type: "NATURAL SATELLITE",
-    distance: "384,400 km from Earth",
-    diameter: "3,474 km",
-    mass: "7.342 × 10²² kg",
-    temperature: "250 K",
-    description:
-      "The Moon is Earth's natural satellite and the fifth-largest moon in the Solar System."
-  };
+moon.name = "Moon";
 
-  scene.add(moon);
+moon.userData.objectKey = "Moon";
 
-  celestialObjects.push(moon);
+moon.position.set(
+  2.2,
+  0,
+  0
+);
 
-  moon.userData.orbitParent = parent;
-
-  moon.userData.orbitAngle = 0;
-}
+moonPivot.add(moon);
 
 
 /* =========================================================
    SATURN RINGS
    ========================================================= */
 
-function createSaturnRings(parent) {
+const saturn = planetObjects.Saturn;
 
-  const geometry =
-    new THREE.RingGeometry(
-      parent.userData.size * 1.45,
-      parent.userData.size * 2.25,
-      96
-    );
+const ringGeometry = new THREE.RingGeometry(
+  3.6,
+  5.1,
+  96
+);
 
-  const material =
-    new THREE.MeshBasicMaterial({
-      color: 0xc7b58d,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.75
-    });
+const ringMaterial = new THREE.MeshBasicMaterial({
+  color: 0xb9aa83,
+  transparent: true,
+  opacity: 0.68,
+  side: THREE.DoubleSide
+});
 
-  const rings =
-    new THREE.Mesh(
-      geometry,
-      material
-    );
+const rings = new THREE.Mesh(
+  ringGeometry,
+  ringMaterial
+);
 
-  rings.rotation.x =
-    Math.PI / 2.2;
+rings.rotation.x = Math.PI / 2.4;
 
-  parent.add(rings);
-}
+saturn.add(rings);
 
 
 /* =========================================================
    ASTEROID BELT
    ========================================================= */
 
-function createAsteroidBelt() {
+const asteroidCount = 900;
 
-  const count = 900;
+const asteroidGeometry =
+  new THREE.BufferGeometry();
 
-  const positions =
-    new Float32Array(
-      count * 3
-    );
+const asteroidPositions =
+  new Float32Array(asteroidCount * 3);
 
-  for (let i = 0; i < count; i++) {
+for (let i = 0; i < asteroidCount; i++) {
 
-    const angle =
-      Math.random() *
-      Math.PI *
-      2;
+  const angle =
+    Math.random() * Math.PI * 2;
 
-    const radius =
-      31 +
-      Math.random() * 3.5;
+  const radius =
+    25 + Math.random() * 4;
 
-    const height =
-      (Math.random() - 0.5) *
-      1.2;
+  const y =
+    (Math.random() - 0.5) * 1.3;
 
-    positions[i * 3] =
-      Math.cos(angle) * radius;
+  asteroidPositions[i * 3] =
+    Math.cos(angle) * radius;
 
-    positions[i * 3 + 1] =
-      height;
+  asteroidPositions[i * 3 + 1] =
+    y;
 
-    positions[i * 3 + 2] =
-      Math.sin(angle) * radius;
-  }
+  asteroidPositions[i * 3 + 2] =
+    Math.sin(angle) * radius;
+
+}
+
+asteroidGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(
+    asteroidPositions,
+    3
+  )
+);
+
+const asteroidMaterial =
+  new THREE.PointsMaterial({
+    color: 0x8b8175,
+    size: 0.07,
+    transparent: true,
+    opacity: 0.7
+  });
+
+const asteroidBelt = new THREE.Points(
+  asteroidGeometry,
+  asteroidMaterial
+);
+
+solarSystemGroup.add(asteroidBelt);
+
+
+/* =========================================================
+   STAR FIELD
+   ========================================================= */
+
+function createStarField(
+  count,
+  radius,
+  size,
+  opacity
+) {
 
   const geometry =
     new THREE.BufferGeometry();
 
-  geometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(
-      positions,
-      3
-    )
-  );
-
-  const material =
-    new THREE.PointsMaterial({
-      color: 0x9a8f83,
-      size: 0.09,
-      transparent: true,
-      opacity: 0.8
-    });
-
-  const belt =
-    new THREE.Points(
-      geometry,
-      material
-    );
-
-  scene.add(belt);
-}
-
-
-/* =========================================================
-   STARS
-   ========================================================= */
-
-function createStars() {
-
-  const count = 12000;
-
   const positions =
-    new Float32Array(
-      count * 3
-    );
+    new Float32Array(count * 3);
 
   for (let i = 0; i < count; i++) {
 
-    const radius =
-      300 +
-      Math.random() * 7000;
+    const r =
+      radius * Math.pow(Math.random(), 0.35);
 
     const theta =
-      Math.random() *
-      Math.PI *
-      2;
+      Math.random() * Math.PI * 2;
 
     const phi =
       Math.acos(
@@ -660,22 +613,15 @@ function createStars() {
       );
 
     positions[i * 3] =
-      radius *
-      Math.sin(phi) *
-      Math.cos(theta);
+      r * Math.sin(phi) * Math.cos(theta);
 
     positions[i * 3 + 1] =
-      radius *
-      Math.cos(phi);
+      r * Math.cos(phi);
 
     positions[i * 3 + 2] =
-      radius *
-      Math.sin(phi) *
-      Math.sin(theta);
-  }
+      r * Math.sin(phi) * Math.sin(theta);
 
-  const geometry =
-    new THREE.BufferGeometry();
+  }
 
   geometry.setAttribute(
     "position",
@@ -687,52 +633,88 @@ function createStars() {
 
   const material =
     new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 1.15,
+      color: 0xbfdfff,
+      size,
       transparent: true,
-      opacity: 0.85
+      opacity,
+      depthWrite: false
     });
 
-  const stars =
-    new THREE.Points(
-      geometry,
-      material
-    );
+  return new THREE.Points(
+    geometry,
+    material
+  );
 
-  scene.add(stars);
 }
+
+const stars = createStarField(
+  12000,
+  900,
+  0.65,
+  0.8
+);
+
+scene.add(stars);
 
 
 /* =========================================================
-   BACKGROUND DUST
+   MILKY WAY
    ========================================================= */
 
-function createNebulaDust() {
+function createGalaxy(
+  radius,
+  arms,
+  starsCount,
+  color
+) {
 
-  const count = 2500;
+  const geometry =
+    new THREE.BufferGeometry();
 
   const positions =
     new Float32Array(
-      count * 3
+      starsCount * 3
     );
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < starsCount; i++) {
+
+    const r =
+      Math.pow(Math.random(), 0.65) *
+      radius;
+
+    const arm =
+      Math.floor(
+        Math.random() * arms
+      );
+
+    const baseAngle =
+      (arm / arms) *
+      Math.PI * 2;
+
+    const spiral =
+      r * 0.32;
+
+    const angle =
+      baseAngle +
+      spiral +
+      (Math.random() - 0.5) *
+      0.65;
+
+    const thickness =
+      (Math.random() - 0.5) *
+      Math.max(0.2, radius * 0.035);
 
     positions[i * 3] =
-      (Math.random() - 0.5) *
-      900;
+      Math.cos(angle) * r;
 
     positions[i * 3 + 1] =
-      (Math.random() - 0.5) *
-      900;
+      thickness *
+      (1 - r / radius);
 
     positions[i * 3 + 2] =
-      (Math.random() - 0.5) *
-      900;
-  }
+      Math.sin(angle) * r;
 
-  const geometry =
-    new THREE.BufferGeometry();
+  }
 
   geometry.setAttribute(
     "position",
@@ -744,440 +726,824 @@ function createNebulaDust() {
 
   const material =
     new THREE.PointsMaterial({
-      color: 0x31557a,
-      size: 0.35,
+      color,
+      size: 0.09,
       transparent: true,
-      opacity: 0.25
+      opacity: 0.72,
+      depthWrite: false
     });
 
-  scene.add(
-    new THREE.Points(
-      geometry,
-      material
-    )
+  return new THREE.Points(
+    geometry,
+    material
   );
+
 }
+
+const milkyWayVisual =
+  createGalaxy(
+    85,
+    5,
+    18000,
+    0x8dbdff
+  );
+
+milkyWayVisual.rotation.x = 0.18;
+
+galaxyGroup.add(milkyWayVisual);
 
 
 /* =========================================================
-   INTERACTION
+   ANDROMEDA
    ========================================================= */
 
-function setupInteraction() {
-
-  const canvas =
-    renderer.domElement;
-
-  canvas.addEventListener(
-    "pointerdown",
-    pointerDown
+const andromedaVisual =
+  createGalaxy(
+    105,
+    4,
+    14000,
+    0xb8d8ff
   );
 
-  canvas.addEventListener(
-    "pointermove",
-    pointerMove
+andromedaVisual.scale.set(
+  0.72,
+  0.25,
+  0.72
+);
+
+andromedaVisual.position.set(
+  160,
+  20,
+  -80
+);
+
+andromedaVisual.rotation.x =
+  -0.45;
+
+galaxyGroup.add(andromedaVisual);
+
+
+/* =========================================================
+   SAGITTARIUS A*
+   ========================================================= */
+
+const blackHoleGroup =
+  new THREE.Group();
+
+blackHoleGroup.position.set(
+  0,
+  0,
+  0
+);
+
+galaxyGroup.add(blackHoleGroup);
+
+const blackHoleGeometry =
+  new THREE.SphereGeometry(
+    3,
+    64,
+    64
   );
 
-  canvas.addEventListener(
-    "pointerup",
-    pointerUp
+const blackHoleMaterial =
+  new THREE.MeshBasicMaterial({
+    color: 0x000000
+  });
+
+const blackHole =
+  new THREE.Mesh(
+    blackHoleGeometry,
+    blackHoleMaterial
   );
 
-  canvas.addEventListener(
-    "pointercancel",
-    pointerUp
+blackHole.name =
+  "Sagittarius A*";
+
+blackHole.userData.objectKey =
+  "Sagittarius A*";
+
+blackHoleGroup.add(blackHole);
+
+
+/* Accretion disk */
+
+const diskGeometry =
+  new THREE.RingGeometry(
+    4,
+    10,
+    128
   );
 
-  canvas.addEventListener(
-    "wheel",
-    event => {
+const diskMaterial =
+  new THREE.MeshBasicMaterial({
+    color: 0xff7b32,
+    transparent: true,
+    opacity: 0.65,
+    side: THREE.DoubleSide
+  });
 
-      event.preventDefault();
-
-      cameraDistance +=
-        event.deltaY * 0.08;
-
-      cameraDistance =
-        THREE.MathUtils.clamp(
-          cameraDistance,
-          8,
-          800
-        );
-    },
-    { passive: false }
+const disk =
+  new THREE.Mesh(
+    diskGeometry,
+    diskMaterial
   );
 
-  canvas.addEventListener(
-    "click",
-    selectObject
+disk.rotation.x =
+  Math.PI / 2;
+
+blackHoleGroup.add(disk);
+
+
+/* =========================================================
+   LARGE-SCALE UNIVERSE
+   ========================================================= */
+
+const largeScaleGeometry =
+  new THREE.BufferGeometry();
+
+const largeScaleCount = 1800;
+
+const largeScalePositions =
+  new Float32Array(
+    largeScaleCount * 3
   );
 
-  canvas.addEventListener(
-    "touchstart",
-    handleTouchStart,
-    { passive: false }
-  );
+for (let i = 0; i < largeScaleCount; i++) {
 
-  canvas.addEventListener(
-    "touchmove",
-    handleTouchMove,
-    { passive: false }
-  );
+  const x =
+    (Math.random() - 0.5) * 600;
+
+  const y =
+    (Math.random() - 0.5) * 250;
+
+  const z =
+    (Math.random() - 0.5) * 600;
+
+  largeScalePositions[i * 3] = x;
+  largeScalePositions[i * 3 + 1] = y;
+  largeScalePositions[i * 3 + 2] = z;
+
 }
 
+largeScaleGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(
+    largeScalePositions,
+    3
+  )
+);
 
-function pointerDown(event) {
+const largeScaleMaterial =
+  new THREE.PointsMaterial({
+    color: 0x6faeff,
+    size: 0.8,
+    transparent: true,
+    opacity: 0.45,
+    depthWrite: false
+  });
 
-  dragging = true;
+const largeScaleUniverse =
+  new THREE.Points(
+    largeScaleGeometry,
+    largeScaleMaterial
+  );
 
-  lastPointerX =
-    event.clientX;
-
-  lastPointerY =
-    event.clientY;
-}
+largeScaleGroup.add(
+  largeScaleUniverse
+);
 
 
-function pointerMove(event) {
+/* =========================================================
+   VISIBILITY MODES
+   ========================================================= */
 
-  if (!dragging) return;
+function setMode(mode) {
 
-  const dx =
-    event.clientX -
-    lastPointerX;
+  solarSystemGroup.visible =
+    mode === "solar";
 
-  const dy =
-    event.clientY -
-    lastPointerY;
+  galaxyGroup.visible =
+    mode === "galaxies" ||
+    mode === "blackholes" ||
+    mode === "universe";
 
-  cameraYaw -=
-    dx * 0.005;
+  largeScaleGroup.visible =
+    mode === "universe";
 
-  cameraPitch -=
-    dy * 0.005;
+  if (mode === "blackholes") {
 
-  cameraPitch =
-    THREE.MathUtils.clamp(
-      cameraPitch,
-      -1.4,
-      1.4
+    focusObject(
+      blackHole,
+      "Sagittarius A*"
     );
 
-  lastPointerX =
-    event.clientX;
+    showToast(
+      "SAGITTARIUS A* — BLACK HOLE MODE"
+    );
 
-  lastPointerY =
-    event.clientY;
-}
-
-
-function pointerUp() {
-
-  dragging = false;
-}
-
-
-/* =========================================================
-   TOUCH / PINCH ZOOM
-   ========================================================= */
-
-function handleTouchStart(event) {
-
-  if (event.touches.length === 2) {
-
-    pinchDistance =
-      getTouchDistance(event.touches);
   }
-}
 
+  if (mode === "galaxies") {
 
-function handleTouchMove(event) {
-
-  if (event.touches.length !== 2) return;
-
-  event.preventDefault();
-
-  const distance =
-    getTouchDistance(event.touches);
-
-  const difference =
-    distance -
-    pinchDistance;
-
-  cameraDistance -=
-    difference * 0.12;
-
-  cameraDistance =
-    THREE.MathUtils.clamp(
-      cameraDistance,
-      8,
-      800
+    cameraTarget.set(
+      35,
+      35,
+      120
     );
 
-  pinchDistance =
-    distance;
-}
-
-
-function getTouchDistance(touches) {
-
-  const dx =
-    touches[0].clientX -
-    touches[1].clientX;
-
-  const dy =
-    touches[0].clientY -
-    touches[1].clientY;
-
-  return Math.sqrt(
-    dx * dx +
-    dy * dy
-  );
-}
-
-
-/* =========================================================
-   OBJECT SELECTION
-   ========================================================= */
-
-function selectObject(event) {
-
-  if (dragging) return;
-
-  const mouse =
-    new THREE.Vector2();
-
-  mouse.x =
-    (event.clientX /
-      window.innerWidth) *
-      2 -
-    1;
-
-  mouse.y =
-    -(event.clientY /
-      window.innerHeight) *
-      2 +
-    1;
-
-  const raycaster =
-    new THREE.Raycaster();
-
-  raycaster.setFromCamera(
-    mouse,
-    camera
-  );
-
-  const hits =
-    raycaster.intersectObjects(
-      celestialObjects
+    showToast(
+      "GALAXY EXPLORATION MODE"
     );
 
-  if (!hits.length) return;
+  }
 
-  const object =
-    hits[0].object;
+  if (mode === "universe") {
 
-  selectedObject =
-    object;
+    cameraTarget.set(
+      0,
+      80,
+      300
+    );
 
-  showObject(object.userData);
+    showToast(
+      "LARGE-SCALE UNIVERSE VIEW"
+    );
 
-  focusObject(object);
+  }
+
+  if (mode === "solar") {
+
+    cameraTarget.set(
+      0,
+      15,
+      42
+    );
+
+    showToast(
+      "SOLAR SYSTEM MODE"
+    );
+
+  }
+
+  updateScaleDisplay(mode);
+
 }
 
 
 /* =========================================================
-   FOCUS CAMERA
+   CAMERA
    ========================================================= */
 
-function focusObject(object) {
-
-  if (!object) return;
-
-  focusTarget =
-    object.position.clone();
-
-  targetCameraDistance =
-    Math.max(
-      object.userData?.size
-        ? object.userData.size * 7
-        : 12,
-      8
-    );
-
-  cameraDistance =
-    targetCameraDistance;
-
-  focusActive = true;
-}
-
-
-/* =========================================================
-   UI
-   ========================================================= */
-
-function setupUI() {
-
-  const closeButton =
-    document.getElementById(
-      "close-panel"
-    );
-
-  closeButton.addEventListener(
-    "click",
-    closePanel
+const cameraTarget =
+  new THREE.Vector3(
+    0,
+    15,
+    42
   );
 
-  document
-    .getElementById("zoom-in")
-    .addEventListener(
-      "click",
-      () => {
-
-        cameraDistance *= 0.75;
-
-        cameraDistance =
-          Math.max(
-            8,
-            cameraDistance
-          );
-      }
-    );
-
-  document
-    .getElementById("zoom-out")
-    .addEventListener(
-      "click",
-      () => {
-
-        cameraDistance *= 1.3;
-
-        cameraDistance =
-          Math.min(
-            800,
-            cameraDistance
-          );
-      }
-    );
-
-  document
-    .getElementById("reset-camera")
-    .addEventListener(
-      "click",
-      resetCamera
-    );
-
-  document
-    .getElementById("focus-button")
-    .addEventListener(
-      "click",
-      () => {
-
-        if (selectedObject) {
-          focusObject(
-            selectedObject
-          );
-        }
-      }
-    );
-
-  const search =
-    document.getElementById(
-      "search"
-    );
-
-  search.addEventListener(
-    "keydown",
-    event => {
-
-      if (event.key === "Enter") {
-
-        searchObject(
-          search.value
-        );
-      }
-    }
-  );
-
-  document
-    .getElementById("exploreButton")
-    .addEventListener(
-      "click",
-      resetCamera
-    );
-}
-
-
-function showObject(data) {
-
-  if (!data) return;
-
-  document
-    .getElementById("object-type")
-    .textContent =
-    data.type || "CELESTIAL BODY";
-
-  document
-    .getElementById("object-name")
-    .textContent =
-    data.name || "Unknown";
-
-  document
-    .getElementById("object-distance")
-    .textContent =
-    data.distance || "—";
-
-  document
-    .getElementById("object-diameter")
-    .textContent =
-    data.diameter || "—";
-
-  document
-    .getElementById("object-mass")
-    .textContent =
-    data.mass || "—";
-
-  document
-    .getElementById("object-temperature")
-    .textContent =
-    data.temperature || "—";
-
-  document
-    .getElementById("object-description")
-    .textContent =
-    data.description || "";
-
-  document
-    .getElementById("object-panel")
-    .classList.add("visible");
-}
-
-
-function closePanel() {
-
-  document
-    .getElementById("object-panel")
-    .classList.remove("visible");
-
-  selectedObject = null;
-}
-
-
-function resetCamera() {
-
-  focusTarget.set(
+let cameraFocus =
+  new THREE.Vector3(
     0,
     0,
     0
   );
 
-  cameraYaw = 0.35;
+let focusObjectRef = null;
 
-  cameraPitch = 0.35;
+function focusObject(
+  object,
+  key
+) {
 
-  cameraDistance = 105;
+  if (!object) return;
 
-  closePanel();
+  selectedObject = object;
+
+  focusObjectRef = object;
+
+  cameraFocus.copy(
+    object.getWorldPosition(
+      new THREE.Vector3()
+    )
+  );
+
+  const radius =
+    OBJECTS[key]?.radius || 2;
+
+  cameraTarget.copy(
+    cameraFocus
+  ).add(
+    new THREE.Vector3(
+      radius * 3.2,
+      radius * 1.8,
+      radius * 5
+    )
+  );
+
+  openObjectPanel(key);
+}
+
+
+/* =========================================================
+   CAMERA CONTROLS
+   ========================================================= */
+
+let isDragging = false;
+
+let pointerMoved = false;
+
+let previousX = 0;
+let previousY = 0;
+
+let cameraDistance = 42;
+
+let cameraAzimuth = 0;
+let cameraElevation = 0.3;
+
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  event => {
+
+    isDragging = true;
+
+    pointerMoved = false;
+
+    previousX = event.clientX;
+    previousY = event.clientY;
+
+    renderer.domElement.setPointerCapture(
+      event.pointerId
+    );
+
+  }
+);
+
+
+renderer.domElement.addEventListener(
+  "pointermove",
+  event => {
+
+    if (!isDragging) return;
+
+    const dx =
+      event.clientX - previousX;
+
+    const dy =
+      event.clientY - previousY;
+
+    if (
+      Math.abs(dx) > 2 ||
+      Math.abs(dy) > 2
+    ) {
+
+      pointerMoved = true;
+
+    }
+
+    previousX = event.clientX;
+    previousY = event.clientY;
+
+    cameraAzimuth -=
+      dx * 0.006;
+
+    cameraElevation -=
+      dy * 0.004;
+
+    cameraElevation =
+      THREE.MathUtils.clamp(
+        cameraElevation,
+        -1.35,
+        1.35
+      );
+
+  }
+);
+
+
+renderer.domElement.addEventListener(
+  "pointerup",
+  event => {
+
+    isDragging = false;
+
+    try {
+
+      renderer.domElement.releasePointerCapture(
+        event.pointerId
+      );
+
+    } catch (_) {}
+
+  }
+);
+
+
+renderer.domElement.addEventListener(
+  "wheel",
+  event => {
+
+    event.preventDefault();
+
+    cameraDistance *=
+      1 + event.deltaY * 0.001;
+
+    cameraDistance =
+      THREE.MathUtils.clamp(
+        cameraDistance,
+        3,
+        1500
+      );
+
+  },
+  {
+    passive: false
+  }
+);
+
+
+/* =========================================================
+   RAYCASTING
+   ========================================================= */
+
+const raycaster =
+  new THREE.Raycaster();
+
+const pointer =
+  new THREE.Vector2();
+
+let selectedObject = null;
+
+renderer.domElement.addEventListener(
+  "click",
+  event => {
+
+    if (pointerMoved) {
+
+      pointerMoved = false;
+
+      return;
+
+    }
+
+    const rect =
+      renderer.domElement.getBoundingClientRect();
+
+    pointer.x =
+      ((event.clientX - rect.left) /
+        rect.width) *
+        2 - 1;
+
+    pointer.y =
+      -(
+        (event.clientY - rect.top) /
+        rect.height
+      ) *
+        2 + 1;
+
+    raycaster.setFromCamera(
+      pointer,
+      camera
+    );
+
+    const objects = [
+      ...Object.values(planetObjects),
+      moon,
+      sun,
+      blackHole
+    ];
+
+    const hits =
+      raycaster.intersectObjects(
+        objects,
+        true
+      );
+
+    if (!hits.length) return;
+
+    let hit =
+      hits[0].object;
+
+    let key =
+      hit.userData.objectKey ||
+      hit.name;
+
+    if (!key) return;
+
+    while (
+      hit.parent &&
+      !hit.userData.objectKey &&
+      !hit
+               !hit.name
+    ) {
+
+      hit = hit.parent;
+
+    }
+
+    key =
+      hit.userData.objectKey ||
+      hit.name ||
+      key;
+
+    if (OBJECTS[key]) {
+
+      focusObject(
+        hit,
+        key
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   PANEL
+   ========================================================= */
+
+const objectPanel =
+  document.getElementById(
+    "object-panel"
+  );
+
+const objectName =
+  document.getElementById(
+    "object-name"
+  );
+
+const objectType =
+  document.getElementById(
+    "object-type"
+  );
+
+const panelContent =
+  document.getElementById(
+    "panel-content"
+  );
+
+
+function openObjectPanel(key) {
+
+  const data =
+    OBJECTS[key];
+
+  if (!data) return;
+
+  objectName.textContent =
+    data.name;
+
+  objectType.textContent =
+    data.type;
+
+  renderOverview(key);
+
+  objectPanel.classList.add(
+    "visible"
+  );
+
+}
+
+
+function renderOverview(key) {
+
+  const data =
+    OBJECTS[key];
+
+  panelContent.innerHTML = `
+
+    <div class="fact">
+      <span>Distance</span>
+      <span>${data.distance}</span>
+    </div>
+
+    <div class="fact">
+      <span>Size</span>
+      <span>${data.size}</span>
+    </div>
+
+    <div class="fact">
+      <span>Mass</span>
+      <span>${data.mass}</span>
+    </div>
+
+    <div class="fact">
+      <span>Temperature</span>
+      <span>${data.temperature}</span>
+    </div>
+
+    <p style="
+      margin-top:18px;
+      color:#91adbb;
+      line-height:1.7;
+    ">
+      Scientific representation using publicly
+      available astronomical information.
+      Visual distances and object sizes are
+      compressed for interactive exploration.
+    </p>
+
+  `;
+
+}
+
+
+document
+  .getElementById("close-panel")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      objectPanel.classList.remove(
+        "visible"
+      );
+
+      selectedObject = null;
+      focusObjectRef = null;
+
+    }
+  );
+
+
+document
+  .getElementById("focus-button")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      if (!selectedObject) return;
+
+      const key =
+        selectedObject.userData.objectKey ||
+        selectedObject.name;
+
+      focusObject(
+        selectedObject,
+        key
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+document
+  .querySelectorAll(
+    ".object-tabs button"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(
+            ".object-tabs button"
+          )
+          .forEach(
+            b => b.classList.remove(
+              "active"
+            )
+          );
+
+        button.classList.add(
+          "active"
+        );
+
+        const key =
+          selectedObject?.userData
+            ?.objectKey ||
+          selectedObject?.name;
+
+        if (!key) return;
+
+        if (
+          button.dataset.tab ===
+          "overview"
+        ) {
+
+          renderOverview(key);
+
+        }
+
+        if (
+          button.dataset.tab ===
+          "facts"
+        ) {
+
+          renderFacts(key);
+
+        }
+
+        if (
+          button.dataset.tab ===
+          "history"
+        ) {
+
+          renderHistory(key);
+
+        }
+
+      }
+    );
+
+  });
+
+
+function renderFacts(key) {
+
+  const data =
+    OBJECTS[key];
+
+  panelContent.innerHTML = `
+
+    <p>
+      <strong style="color:#55eaff">
+        ${data.name}
+      </strong>
+      is classified as a
+      ${data.type.toLowerCase()}.
+    </p>
+
+    <div class="fact">
+      <span>Catalog status</span>
+      <span>REAL OBJECT</span>
+    </div>
+
+    <div class="fact">
+      <span>Data status</span>
+      <span>OBSERVED / ESTIMATED</span>
+    </div>
+
+    <div class="fact">
+      <span>Visualization</span>
+      <span>COMPRESSED SCALE</span>
+    </div>
+
+  `;
+
+}
+
+
+function renderHistory(key) {
+
+  const messages = {
+
+    Sun:
+      "The Sun has been observed since antiquity and studied in detail with modern space missions.",
+
+    Earth:
+      "Earth is the only known astronomical body confirmed to support life.",
+
+    Moon:
+      "The Moon has been studied extensively, including direct exploration by crewed and robotic missions.",
+
+    Mars:
+      "Mars has been observed for centuries and explored by numerous robotic missions.",
+
+    Jupiter:
+      "Jupiter has been observed since antiquity and explored by spacecraft including Galileo and Juno.",
+
+    Saturn:
+      "Saturn's rings and moons have been studied extensively by missions including Cassini-Huygens.",
+
+    Uranus:
+      "Uranus was identified as a planet in the modern era after observations by William Herschel.",
+
+    Neptune:
+      "Neptune was mathematically predicted before being observed in 1846.",
+
+    Pluto:
+      "Pluto was discovered in 1930 and is now classified as a dwarf planet.",
+
+    "Milky Way":
+      "The structure of the Milky Way has been reconstructed through observations across many wavelengths.",
+
+    "Andromeda Galaxy":
+      "Andromeda has been observed for centuries and is one of the best-studied nearby galaxies.",
+
+    "Sagittarius A*":
+      "Sagittarius A* has been studied through observations of stars orbiting the compact object at the center of the Milky Way."
+
+  };
+
+  panelContent.innerHTML = `
+
+    <p style="
+      color:#a9c0cc;
+      line-height:1.8;
+    ">
+      ${messages[key] ||
+      "Astronomical observations and modern scientific measurements provide information about this object."}
+    </p>
+
+  `;
+
 }
 
 
@@ -1185,14 +1551,1278 @@ function resetCamera() {
    SEARCH
    ========================================================= */
 
-function searchObject(query) {
+const search =
+  document.getElementById(
+    "search"
+  );
+
+const searchResults =
+  document.getElementById(
+    "search-results"
+  );
+
+
+function performSearch(query) {
 
   const text =
-    query
-      .trim()
-      .toLowerCase();
+    query.trim().toLowerCase();
 
-  if (!text) return;
+  searchResults.innerHTML = "";
+
+  if (!text) {
+
+    searchResults.classList.remove(
+      "visible"
+    );
+
+    return;
+
+  }
+
+  const matches =
+    Object.keys(OBJECTS)
+      .filter(
+        key =>
+          key.toLowerCase()
+            .includes(text)
+      )
+      .slice(0, 8);
+
+  if (!matches.length) {
+
+    searchResults.innerHTML =
+      `<div class="search-result">
+        No object found
+      </div>`;
+
+  } else {
+
+    matches.forEach(key => {
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+      item.className =
+        "search-result";
+
+      item.textContent =
+        OBJECTS[key].name;
+
+      item.addEventListener(
+        "click",
+        () => {
+
+          search.value =
+            OBJECTS[key].name;
+
+          searchResults.classList.remove(
+            "visible"
+          );
+
+          selectSearchObject(key);
+
+        }
+      );
+
+      searchResults.appendChild(
+        item
+      );
+
+    });
+
+  }
+
+  searchResults.classList.add(
+    "visible"
+  );
+
+}
+
+
+function selectSearchObject(key) {
 
   const object =
-    celestialObjects.f
+    getObjectByKey(key);
+
+  if (!object) return;
+
+  if (
+    key === "Milky Way" ||
+    key === "Andromeda Galaxy"
+  ) {
+
+    setMode("galaxies");
+
+  }
+
+  if (
+    key === "Sagittarius A*"
+  ) {
+
+    setMode("blackholes");
+
+  }
+
+  if (
+    key !== "Milky Way" &&
+    key !== "Andromeda Galaxy" &&
+    key !== "Sagittarius A*"
+  ) {
+
+    setMode("solar");
+
+  }
+
+  focusObject(
+    object,
+    key
+  );
+
+}
+
+
+function getObjectByKey(key) {
+
+  if (planetObjects[key])
+    return planetObjects[key];
+
+  if (key === "Moon")
+    return moon;
+
+  if (key === "Sun")
+    return sun;
+
+  if (key === "Sagittarius A*")
+    return blackHole;
+
+  if (key === "Milky Way")
+    return milkyWayVisual;
+
+  if (key === "Andromeda Galaxy")
+    return andromedaVisual;
+
+  return null;
+
+}
+
+
+search?.addEventListener(
+  "input",
+  () => {
+
+    performSearch(
+      search.value
+    );
+
+  }
+);
+
+
+search?.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Enter"
+    ) {
+
+      const first =
+        Object.keys(OBJECTS)
+          .find(key =>
+            key.toLowerCase()
+              .includes(
+                search.value
+                  .trim()
+                  .toLowerCase()
+              )
+          );
+
+      if (first) {
+
+        selectSearchObject(
+          first
+        );
+
+        searchResults.classList.remove(
+          "visible"
+        );
+
+      }
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   SIDE MENU
+   ========================================================= */
+
+const menu =
+  document.getElementById(
+    "side-menu"
+  );
+
+document
+  .getElementById("menuButton")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      menu.classList.toggle(
+        "visible"
+      );
+
+    }
+  );
+
+
+document
+  .querySelectorAll(
+    "#side-menu button"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const action =
+          button.dataset.action;
+
+        menu.classList.remove(
+          "visible"
+        );
+
+        handleAction(action);
+
+      }
+    );
+
+  });
+
+
+function handleAction(action) {
+
+  if (action === "solar")
+    setMode("solar");
+
+  if (action === "galaxies")
+    setMode("galaxies");
+
+  if (action === "blackholes")
+    setMode("blackholes");
+
+  if (action === "compare")
+    openCompare();
+
+  if (action === "time")
+    openTimeTravel();
+
+  if (action === "reset")
+    resetCamera();
+
+}
+
+
+/* =========================================================
+   TOP BUTTONS
+   ========================================================= */
+
+document
+  .getElementById("homeButton")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      setMode("solar");
+
+      closeAllPanels();
+
+      resetCamera();
+
+    }
+  );
+
+
+document
+  .getElementById("startButton")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById("welcome")
+        ?.remove();
+
+      setMode("solar");
+
+      showToast(
+        "SOLAR SYSTEM INITIALIZED"
+      );
+
+    }
+  );
+
+
+document
+  .querySelector(
+    '[data-mode="solar"]'
+  )
+  ?.addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById("welcome")
+        ?.remove();
+
+      setMode("solar");
+
+    }
+  );
+
+
+/* =========================================================
+   EXPLORE JOURNEY
+   ========================================================= */
+
+const explorePanel =
+  document.getElementById(
+    "explore-panel"
+  );
+
+const journeyText =
+  document.getElementById(
+    "journey-text"
+  );
+
+const journeyProgress =
+  document.getElementById(
+    "journey-progress"
+  );
+
+const journeySteps = [
+
+  {
+    title: "EARTH",
+    description:
+      "Our home planet."
+  },
+
+  {
+    title: "SOLAR SYSTEM",
+    description:
+      "The Sun and its planetary system."
+  },
+
+  {
+    title: "MILKY WAY",
+    description:
+      "Our barred spiral galaxy."
+  },
+
+  {
+    title: "LOCAL GROUP",
+    description:
+      "A gravitationally bound collection of galaxies."
+  },
+
+  {
+    title: "LARGE-SCALE UNIVERSE",
+    description:
+      "Galaxies form enormous cosmic structures."
+  },
+
+  {
+    title: "OBSERVABLE UNIVERSE",
+    description:
+      "The region whose light can reach us."
+  }
+
+];
+
+let journeyIndex = 0;
+
+
+function updateJourney() {
+
+  const step =
+    journeySteps[
+      journeyIndex
+    ];
+
+  journeyText.innerHTML = `
+    <strong>${step.title}</strong>
+    <br>
+    <span style="
+      color:#8da9ba;
+      font-size:12px;
+      font-weight:400;
+    ">
+      ${step.description}
+    </span>
+  `;
+
+  journeyProgress.style.width =
+    (
+      journeyIndex /
+      (journeySteps.length - 1) *
+      100
+    ) + "%";
+
+  if (
+    journeyIndex <= 1
+  ) {
+
+    setMode("solar");
+
+  } else if (
+    journeyIndex <= 3
+  ) {
+
+    setMode("galaxies");
+
+  } else {
+
+    setMode("universe");
+
+  }
+
+}
+
+
+document
+  .getElementById("exploreButton")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      journeyIndex = 0;
+
+      explorePanel.classList.remove(
+        "hidden"
+      );
+
+      updateJourney();
+
+    }
+  );
+
+
+document
+  .getElementById("journey-next")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      journeyIndex =
+        Math.min(
+          journeyIndex + 1,
+          journeySteps.length - 1
+        );
+
+      updateJourney();
+
+    }
+  );
+
+
+document
+  .getElementById("journey-prev")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      journeyIndex =
+        Math.max(
+          journeyIndex - 1,
+          0
+        );
+
+      updateJourney();
+
+    }
+  );
+
+
+document
+  .getElementById("close-explore")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      explorePanel.classList.add(
+        "hidden"
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   COMPARE
+   ========================================================= */
+
+const comparePanel =
+  document.getElementById(
+    "compare-panel"
+  );
+
+const compareA =
+  document.getElementById(
+    "compare-a"
+  );
+
+const compareB =
+  document.getElementById(
+    "compare-b"
+  );
+
+const compareTable =
+  document.getElementById(
+    "compare-table"
+  );
+
+
+const compareObjects = [
+  "Earth",
+  "Mars",
+  "Jupiter",
+  "Saturn",
+  "Venus",
+  "Neptune"
+];
+
+
+compareObjects.forEach(key => {
+
+  const optionA =
+    document.createElement(
+      "option"
+    );
+
+  optionA.value = key;
+  optionA.textContent = key;
+
+  compareA.appendChild(
+    optionA
+  );
+
+
+  const optionB =
+    document.createElement(
+      "option"
+    );
+
+  optionB.value = key;
+  optionB.textContent = key;
+
+  compareB.appendChild(
+    optionB
+  );
+
+});
+
+
+compareB.value =
+  "Mars";
+
+
+function updateComparison() {
+
+  const a =
+    OBJECTS[
+      compareA.value
+    ];
+
+  const b =
+    OBJECTS[
+      compareB.value
+    ];
+
+  if (!a || !b) return;
+
+  compareTable.innerHTML = `
+
+    <div class="compare-row">
+      <span>PROPERTY</span>
+      <span>${a.name}</span>
+      <span>${b.name}</span>
+    </div>
+
+    <div class="compare-row">
+      <span>TYPE</span>
+      <span>${a.type}</span>
+      <span>${b.type}</span>
+    </div>
+
+    <div class="compare-row">
+      <span>SIZE</span>
+      <span>${a.size}</span>
+      <span>${b.size}</span>
+    </div>
+
+    <div class="compare-row">
+      <span>MASS</span>
+      <span>${a.mass}</span>
+      <span>${b.mass}</span>
+    </div>
+
+    <div class="compare-row">
+      <span>TEMPERATURE</span>
+      <span>${a.temperature}</span>
+      <span>${b.temperature}</span>
+    </div>
+
+  `;
+
+}
+
+
+compareA.addEventListener(
+  "change",
+  updateComparison
+);
+
+compareB.addEventListener(
+  "change",
+  updateComparison
+);
+
+
+function openCompare() {
+
+  comparePanel.classList.remove(
+    "hidden"
+  );
+
+  updateComparison();
+
+}
+
+
+document
+  .getElementById("close-compare")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      comparePanel.classList.add(
+        "hidden"
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   TIME TRAVEL
+   ========================================================= */
+
+const timeSlider =
+  document.getElementById(
+    "time-slider"
+  );
+
+const timeDescription =
+  document.getElementById(
+    "time-description"
+  );
+
+const timeBadge =
+  document.getElementById(
+    "time-badge"
+  );
+
+
+const timeline = [
+
+  {
+    description:
+      "The early Universe was extremely hot and dense.",
+    badge:
+      "MODEL / RECONSTRUCTION"
+  },
+
+  {
+    description:
+      "The first generations of stars and galaxies formed.",
+    badge:
+      "MODEL / OBSERVATION"
+  },
+
+  {
+    description:
+      "Galaxies evolved and large-scale cosmic structures developed.",
+    badge:
+      "OBSERVED + MODELED"
+  },
+
+  {
+    description:
+      "The Solar System formed approximately 4.6 billion years ago.",
+    badge:
+      "OBSERVED / MODELED"
+  },
+
+  {
+    description:
+      "Today: approximately 13.8 billion years after the beginning of cosmic expansion.",
+    badge:
+      "OBSERVED / MEASURED"
+  },
+
+  {
+    description:
+      "The far future depends on cosmological models and remains uncertain.",
+    badge:
+      "HYPOTHESIS / MODEL"
+  }
+
+];
+
+
+function updateTimeTravel() {
+
+  const index =
+    Number(
+      timeSlider.value
+    );
+
+  const item =
+    timeline[index];
+
+  timeDescription.textContent =
+    item.description;
+
+  timeBadge.textContent =
+    item.badge;
+
+}
+
+
+timeSlider?.addEventListener(
+  "input",
+  updateTimeTravel
+);
+
+
+function openTimeTravel() {
+
+  document
+    .getElementById("time-panel")
+    ?.classList.remove(
+      "hidden"
+    );
+
+  updateTimeTravel();
+
+}
+
+
+document
+  .getElementById("close-time")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById("time-panel")
+        ?.classList.add(
+          "hidden"
+        );
+
+    }
+  );
+
+
+/* =========================================================
+   BREADCRUMB
+   ========================================================= */
+
+document
+  .querySelectorAll(
+    "[data-breadcrumb]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const value =
+          button.dataset.breadcrumb;
+
+        if (
+          value === "universe"
+        ) {
+
+          setMode("universe");
+
+        }
+
+        if (
+          value === "milkyway"
+        ) {
+
+          setMode("galaxies");
+
+        }
+
+        if (
+          value === "solarsystem"
+        ) {
+
+          setMode("solar");
+
+        }
+
+      }
+    );
+
+  });
+
+
+/* =========================================================
+   ZOOM BUTTONS
+   ========================================================= */
+
+document
+  .getElementById("zoom-in")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      cameraDistance *= 0.75;
+
+      cameraDistance =
+        Math.max(
+          cameraDistance,
+          3
+        );
+
+    }
+  );
+
+
+document
+  .getElementById("zoom-out")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      cameraDistance *= 1.35;
+
+      cameraDistance =
+        Math.min(
+          cameraDistance,
+          1500
+        );
+
+    }
+  );
+
+
+document
+  .getElementById("reset-camera")
+  ?.addEventListener(
+    "click",
+    resetCamera
+  );
+
+
+function resetCamera() {
+
+  cameraDistance = 42;
+
+  cameraAzimuth = 0;
+
+  cameraElevation = 0.3;
+
+  cameraTarget.set(
+    0,
+    15,
+    42
+  );
+
+  cameraFocus.set(
+    0,
+    0,
+    0
+  );
+
+  focusObjectRef = null;
+
+  selectedObject = null;
+
+  objectPanel.classList.remove(
+    "visible"
+  );
+
+}
+
+
+/* =========================================================
+   CLOSE ALL PANELS
+   ========================================================= */
+
+function closeAllPanels() {
+
+  objectPanel.classList.remove(
+    "visible"
+  );
+
+  comparePanel.classList.add(
+    "hidden"
+  );
+
+  document
+    .getElementById("time-panel")
+    ?.classList.add(
+      "hidden"
+    );
+
+  explorePanel.classList.add(
+    "hidden"
+  );
+
+}
+
+
+/* =========================================================
+   SCALE DISPLAY
+   ========================================================= */
+
+const scaleValue =
+  document.getElementById(
+    "scale-value"
+  );
+
+
+function updateScaleDisplay(mode) {
+
+  const names = {
+
+    solar:
+      "SOLAR SYSTEM",
+
+    galaxies:
+      "GALAXIES / LOCAL GROUP",
+
+    blackholes:
+      "GALACTIC CENTER",
+
+    universe:
+      "LARGE-SCALE UNIVERSE"
+
+  };
+
+  scaleValue.textContent =
+    names[mode] ||
+    "SOLAR SYSTEM";
+
+}
+
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+const toast =
+  document.getElementById(
+    "toast"
+  );
+
+let toastTimer = null;
+
+
+function showToast(message) {
+
+  if (!toast) return;
+
+  toast.textContent =
+    message;
+
+  toast.classList.add(
+    "visible"
+  );
+
+  clearTimeout(
+    toastTimer
+  );
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "visible"
+        );
+
+      },
+      2400
+    );
+
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+const clock =
+  new THREE.Clock();
+
+
+function animate() {
+
+  requestAnimationFrame(
+    animate
+  );
+
+  const elapsed =
+    clock.getElapsedTime();
+
+
+  sun.rotation.y =
+    elapsed * 0.05;
+
+
+  planetData.forEach(data => {
+
+    const pivot =
+      planetPivots[data.key];
+
+    if (pivot) {
+
+      pivot.rotation.y +=
+        data.speed;
+
+    }
+
+    const planet =
+      planetObjects[data.key];
+
+    if (planet) {
+
+      planet.rotation.y +=
+        0.0025;
+
+    }
+
+  });
+
+
+  moonPivot.rotation.y =
+    elapsed * 0.25;
+
+  moon.rotation.y +=
+    0.003;
+
+
+  asteroidBelt.rotation.y +=
+    0.0004;
+
+
+  milkyWayVisual.rotation.z =
+    elapsed * 0.003;
+
+  andromedaVisual.rotation.z =
+    -elapsed * 0.002;
+
+
+  disk.rotation.z =
+    elapsed * 0.7;
+
+
+  if (
+    focusObjectRef &&
+    focusObjectRef.parent
+  ) {
+
+    const worldPosition =
+      focusObjectRef.getWorldPosition(
+        new THREE.Vector3()
+      );
+
+    cameraFocus.lerp(
+      worldPosition,
+      0.08
+    );
+
+  }
+
+
+  const desiredX =
+    cameraFocus.x +
+    Math.sin(cameraAzimuth) *
+    Math.cos(cameraElevation) *
+    cameraDistance;
+
+  const desiredY =
+    cameraFocus.y +
+    Math.sin(cameraElevation) *
+    cameraDistance;
+
+  const desiredZ =
+    cameraFocus.z +
+    Math.cos(cameraAzimuth) *
+    Math.cos(cameraElevation) *
+    cameraDistance;
+
+
+  const desiredPosition =
+    new THREE.Vector3(
+      desiredX,
+      desiredY,
+      desiredZ
+    );
+
+  camera.position.lerp(
+    desiredPosition,
+    0.08
+  );
+
+  camera.lookAt(
+    cameraFocus
+  );
+
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+
+animate();
+
+
+/* =========================================================
+   RESIZE
+   ========================================================= */
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+  }
+);
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+const loading =
+  document.getElementById(
+    "loading"
+  );
+
+const loadingProgress =
+  document.getElementById(
+    "loading-progress"
+  );
+
+const loadingText =
+  document.getElementById(
+    "loading-text"
+  );
+
+
+let progress = 0;
+
+const loadingInterval =
+  setInterval(
+    () => {
+
+      progress +=
+        Math.random() * 15 + 5;
+
+      progress =
+        Math.min(
+          progress,
+          100
+        );
+
+      loadingProgress.style.width =
+        progress + "%";
+
+
+      if (progress < 35) {
+
+        loadingText.textContent =
+          "INITIALIZING STAR FIELD...";
+
+      } else if (progress < 65) {
+
+        loadingText.textContent =
+          "BUILDING SOLAR SYSTEM...";
+
+      } else if (progress < 90) {
+
+        loadingText.textContent =
+          "LOADING COSMIC STRUCTURES...";
+
+      } else {
+
+        loadingText.textContent =
+          "UNIVERSE READY";
+
+      }
+
+
+      if (progress >= 100) {
+
+        clearInterval(
+          loadingInterval
+        );
+
+        setTimeout(
+          () => {
+
+            loading.classList.add(
+              "hidden"
+            );
+
+          },
+          450
+        );
+
+      }
+
+    },
+    100
+  );
+
+
+/* =========================================================
+   INITIAL STATE
+   ========================================================= */
+
+setMode("solar");
+
+updateScaleDisplay(
+  "solar"
+);
+
+
+console.log(
+  "UNIVERSE EXPLORER ONLINE"
+);
