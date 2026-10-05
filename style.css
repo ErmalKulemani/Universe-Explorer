@@ -1266,5 +1266,6 @@ body {
     transform: rotate(360deg);
   }
 }
-
-@ke
+.hidden {
+  display: none !important;
+}
